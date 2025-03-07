@@ -69,11 +69,9 @@ codeunit 82572 "ADLSE Upgrade"
         AccountName: Text;
         StorageAccountKeyNameTok: Label 'adlse-storage-account', Locked = true;
     begin
-        if not IsolatedStorage.Contains(StorageAccountKeyNameTok, DataScope::Module) then
+        if not GetConfigurationProvider().Contains(StorageAccountKeyNameTok, DataScope::Module) then
             exit;
-#pragma warning disable LC0043
-        IsolatedStorage.Get(StorageAccountKeyNameTok, DataScope::Module, AccountName);
-#pragma warning restore LC0043
+        GetConfigurationProvider().Get(StorageAccountKeyNameTok, DataScope::Module, AccountName);
 
         if not ADLSESetup.Exists() then
             exit;
@@ -84,7 +82,7 @@ codeunit 82572 "ADLSE Upgrade"
         ADLSESetup."Account Name" := CopyStr(AccountName, 1, MaxStrLen(ADLSESetup."Account Name"));
         ADLSESetup.Modify(true);
 
-        IsolatedStorage.Delete(StorageAccountKeyNameTok, DataScope::Module);
+        GetConfigurationProvider().Delete(StorageAccountKeyNameTok, DataScope::Module);
     end;
 
     local procedure SeperateSchemaAndData()
@@ -157,5 +155,19 @@ codeunit 82572 "ADLSE Upgrade"
     procedure GetCopyValuesFromExportCategoryToExportcategoryTableUpgradeTag(): Code[250]
     begin
         exit('GITHUB-225-CopyValuesFromExportCategoryToExportcategoryTable-20250121');
+    end;
+
+    var
+        ConfigurationProvider: Interface IConfigurationProviderADSLE;
+        ConfigurationProviderSet: Boolean;
+
+    local procedure GetConfigurationProvider(): Interface IConfigurationProviderADSLE
+    var
+        IsolatedStorageConfigProvider: Codeunit ADLSEIsolatedStorageConfigProv;
+    begin
+        if ConfigurationProviderSet then
+            exit(ConfigurationProvider)
+        else
+            exit(IsolatedStorageConfigProvider);
     end;
 }

@@ -98,23 +98,14 @@ codeunit 82565 "ADLSE Credentials"
     [NonDebuggable]
     local procedure GetSecret(KeyName: Text) Secret: Text
     begin
-        if not IsolatedStorage.Contains(KeyName, IsolatedStorageDataScope()) then
-            exit('');
-#pragma warning disable LC0043            
-        IsolatedStorage.Get(KeyName, IsolatedStorageDataScope(), Secret);
-#pragma warning restore LC0043
+        GetConfigurationProvider().TryGet(KeyName, IsolatedStorageDataScope(), Secret);
+
     end;
 
     [NonDebuggable]
     local procedure SetSecret(KeyName: Text; Secret: Text)
     begin
-#pragma warning disable LC0043
-        if EncryptionEnabled() then begin
-            IsolatedStorage.SetEncrypted(KeyName, Secret, IsolatedStorageDataScope());
-            exit;
-        end;
-        IsolatedStorage.Set(KeyName, Secret, IsolatedStorageDataScope());
-#pragma warning restore LC0043
+        GetConfigurationProvider().Set(KeyName, Secret, IsolatedStorageDataScope());
     end;
 
     [NonDebuggable]
@@ -127,5 +118,19 @@ codeunit 82565 "ADLSE Credentials"
     local procedure IsolatedStorageDataScope(): DataScope
     begin
         exit(DataScope::Module); // so that all companies share the same settings
+    end;
+
+    var
+        ConfigurationProvider: Interface IConfigurationProviderADSLE;
+        ConfigurationProviderSet: Boolean;
+
+    local procedure GetConfigurationProvider(): Interface IConfigurationProviderADSLE
+    var
+        IsolatedStorageConfigProvider: Codeunit ADLSEIsolatedStorageConfigProv;
+    begin
+        if ConfigurationProviderSet then
+            exit(ConfigurationProvider)
+        else
+            exit(IsolatedStorageConfigProvider);
     end;
 }

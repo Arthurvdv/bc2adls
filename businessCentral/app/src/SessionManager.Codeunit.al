@@ -156,10 +156,8 @@ codeunit 82570 "ADLSE Session Manager"
     var
         Result: Text;
     begin
-#pragma warning disable LC0043
-        IsolatedStorage.Get(PendingTablesKeyTxt, DataScope::Company, Result);
+        GetConfigurationProvider().Get(PendingTablesKeyTxt, DataScope::Company, Result);
         exit(DeConcatenate(Result));
-#pragma warning restore LC0043
     end;
 
     local procedure Concatenate(Values: List of [Integer]) Result: Text
@@ -187,9 +185,21 @@ codeunit 82570 "ADLSE Session Manager"
 
     internal procedure SavePendingTables(Value: Text)
     begin
-#pragma warning disable LC0043
-        if IsolatedStorage.Set(PendingTablesKeyTxt, Value, DataScope::Company) then
+        if GetConfigurationProvider().Set(PendingTablesKeyTxt, Value, DataScope::Company) then
             Commit(); // changing isolated storage triggers a write transaction      
-#pragma warning restore LC0043      
+    end;
+
+    var
+        ConfigurationProvider: Interface IConfigurationProviderADSLE;
+        ConfigurationProviderSet: Boolean;
+
+    local procedure GetConfigurationProvider(): Interface IConfigurationProviderADSLE
+    var
+        IsolatedStorageConfigProvider: Codeunit ADLSEIsolatedStorageConfigProv;
+    begin
+        if ConfigurationProviderSet then
+            exit(ConfigurationProvider)
+        else
+            exit(IsolatedStorageConfigProvider);
     end;
 }
